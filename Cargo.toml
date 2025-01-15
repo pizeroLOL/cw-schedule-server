@@ -1,0 +1,13 @@
+[package]
+name = "cw-schedule-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ntex = { version = "2.10.0", features = ["tokio"] }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.135"
+sqlx = { version = "0.8.3", features = ["runtime-tokio", "sqlite"] }
+tokio = { version = "1.43.0", features = ["full"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
