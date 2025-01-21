@@ -17,6 +17,17 @@ pub struct Config {
     pub max_timeout: u8,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            db: "db.sqlite".to_string(),
+            heartbeat: Duration::from_secs(5),
+            timeout: Duration::from_secs(20),
+            max_timeout: 6,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 #[allow(unused)]
 pub struct Store {

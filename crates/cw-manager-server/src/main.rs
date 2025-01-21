@@ -2,7 +2,7 @@ mod state;
 mod utils;
 mod ws;
 
-use std::time::Duration;
+use std::{env::args, fs::File, io::Read, path::Path};
 
 use ntex::web::{
     // self,
@@ -13,6 +13,7 @@ use ntex::web::{
     HttpServer,
 };
 use state::{Store, GLOBLE_STORE};
+use utils::Merge;
 // use serde::Deserialize;
 // use sqlx::{
 //     query, query_as, query_scalar, sqlite::SqliteConnectOptions, Executor, FromRow, Pool, Sqlite,
@@ -138,17 +139,35 @@ use state::{Store, GLOBLE_STORE};
 //     HttpResponse::InternalServerError().body("数据库错误")
 // }
 
+fn read_cfg(path: &str) -> Result<state::Config, String> {
+    let mut str = String::new();
+    File::open(&path)
+        .map_err(|e| format!("打开文件配置文件错误：{path} -> {e}"))?
+        .read_to_string(&mut str)
+        .map_err(|e| format!("读取配置文件错误：{path} -> {e}"))?;
+    return toml::from_str(&str).map_err(|e| format!("序列化错误：{path} -> {e}"));
+}
+
+fn get_cfg() -> state::Config {
+    let cfg_defautl_path = "scfg.toml";
+    let tmp = Path::new(cfg_defautl_path).is_file();
+    match (args().nth(2), tmp) {
+        (Some(i), _) => read_cfg(&i),
+        (_, true) => read_cfg(cfg_defautl_path),
+        _ => Ok(state::Config::default()),
+    }
+    .map_err(|e| {
+        tracing::error!("{e}");
+        state::Config::default()
+    })
+    .merge()
+}
+
 #[ntex::main]
 async fn main() {
     tracing_subscriber::fmt().init();
     let mut store = GLOBLE_STORE.write().unwrap();
-    let var_name = state::Config {
-        db: "db.sqlite".to_string(),
-        heartbeat: Duration::from_secs(5),
-        timeout: Duration::from_secs(20),
-        max_timeout: 6,
-    };
-    *store = Some(Store::new(&var_name).await);
+    *store = Some(Store::new(&get_cfg()).await);
     // let db = init_db().await;
     let app = move || {
         App::new()
