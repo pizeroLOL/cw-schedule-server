@@ -1,5 +1,8 @@
 # cw-schedule-server
 
+> [!WARNING]
+> 废弃状态
+
 简易课表服务器
 
 - 获取所有课表 get `/`
